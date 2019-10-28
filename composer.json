@@ -1,0 +1,21 @@
+{
+    "name": "hametuha/indesign-tagged-text",
+    "type": "library",
+    "license": "MIT",
+    "description": "A text converter for InDesign.",
+    "authors": [
+        {
+            "name": "fumikito",
+            "email": "guy@hametuha.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Hametuha\\InDesignTaggedText": "src"
+        }
+    }
+}
