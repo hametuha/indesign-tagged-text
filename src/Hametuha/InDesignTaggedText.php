@@ -49,7 +49,7 @@ class InDesignTaggedText {
 	 */
 	public function convert( $file ) {
 		if ( ! file_exists( $file ) ) {
-			throw new \Exception( sprintf( '%s doesn\'t exist.' ) );
+			throw new \Exception( sprintf( '%s doesn\'t exist.', $file ) );
 		}
 		$content = file_get_contents( $file );
 		if ( ! $content ) {
