@@ -138,6 +138,14 @@ class InDesignTaggedText {
 			}
 			// Remove backslash
 			$line = str_replace( '\\《', '《', $line );
+			// Sup and Sub.
+			foreach ( [
+				'#<sup>([^<]+)</sup>#u' => 'Sup',
+				'#<sub>([^<]*)</sub>#u' => 'Sub',
+			] as $regexp => $style ) {
+				$line = preg_replace( $regexp, '<CharStyle:' . $style . '>$1<CharStyle:>', $line );
+			}
+
 			// If no paragraph styles are set, add no paragraph style.
 			if ( 0 !== strpos( $line,  '<ParaStyle' ) ) {
 				$line = '<ParaStyle:Normal>' . $line;
