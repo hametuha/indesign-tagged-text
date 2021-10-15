@@ -39,7 +39,7 @@ jobs:
 
   release:
     name: Release Build for Composer
-    needs: [ test, assets ]
+    needs: [ test ]
     if: contains(github.ref, 'tags/')
     runs-on: ubuntu-18.04
     steps:
