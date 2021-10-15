@@ -44,12 +44,24 @@ if ( ! class_exists( 'Hametuha\\InDesignTaggedText' ) ) {
 // Initialize.
 $converter = new \Hametuha\InDesignTaggedText( 'MAC', 'UNICODE' );
 
-foreach ( scandir( $dest_dir ) as $file ) {
+// Check directory existence.
+if ( ! is_dir( $dest_dir ) ) {
+	if ( ! mkdir( $dest_dir, 0755, true ) ) {
+		die( sprintf( 'Failed to create destination folder: %s', $dest_dir ) );
+	}
+}
+
+// Scan and convert.
+$total = 0;
+foreach ( scandir( $src_dir ) as $file ) {
 	if ( ! preg_match( '#\.txt$#u', $file ) ) {
 		continue;
 	}
+	printf( 'Converting %s' . PHP_EOL, $file );
 	$converter->convert( $src_dir . '/' . $file );
 	$converter->save( $dest_dir . '/' . $file );
+	$total++;
 }
 
-echo 'Finished converting.' . PHP_EOL;
+echo PHP_EOL;
+echo sprintf( 'Finished converting %d files', $total ) . PHP_EOL;
