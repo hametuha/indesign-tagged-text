@@ -27,7 +27,7 @@ if ( ! class_exists( 'Hametuha\\InDesignTaggedText' ) ) {
 	$found = false;
 	foreach ( [
 		'.',
-		__DIR__
+		__DIR__,
 	] as $base_dir ) {
 		$autoloader = $base_dir . '/vendor/autoload.php';
 		if ( file_exists( $autoloader ) ) {
