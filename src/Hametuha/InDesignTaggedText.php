@@ -101,7 +101,7 @@ class InDesignTaggedText {
 					switch ( $style_name ) {
 						case 'Heading':
 							$line = preg_replace_callback( $regexp, function( $matches ) {
-								return sprintf( "<ParaStyle:Heading%d>", strlen( $matches[1] ) );
+								return sprintf( '<ParaStyle:Heading%d>', strlen( $matches[1] ) );
 							}, $line );
 							break 2;
 						default:
