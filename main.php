@@ -24,10 +24,19 @@ foreach ( [ $src_dir, $dest_dir ] as $dir ) {
 
 // Check class.
 if ( ! class_exists( 'Hametuha\\InDesignTaggedText' ) ) {
-	$autoloader = __DIR__ . '/vendor/autoload.php';
-	if ( file_exists( $autoloader ) ) {
-		require_once $autoloader;
-	} else {
+	$found = false;
+	foreach ( [
+		'.',
+		__DIR__
+	] as $base_dir ) {
+		$autoloader = $base_dir . '/vendor/autoload.php';
+		if ( file_exists( $autoloader ) ) {
+			require_once $autoloader;
+			$found = true;
+			break;
+		}
+	}
+	if ( ! $found ) {
 		die( 'Failed to find composer.' . PHP_EOL );
 	}
 }
