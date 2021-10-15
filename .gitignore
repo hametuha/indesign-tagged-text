@@ -1,3 +1,4 @@
 vendor/
 out.txt
 .Ulysses-Group.plist
+composer.lock

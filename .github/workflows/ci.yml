@@ -1,0 +1,76 @@
+name: Continuous Integration for InDesign Tagged Text
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: UnitTest in PHP ${{ matrix.php }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        php: [ '7.0', '7.4' ] # PHP versions to check.
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup PHP
+        uses: nanasess/setup-php@master
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run test suite
+        run: composer test
+
+      - name: Check Lint
+        run: composer lint
+
+  release:
+    name: Release Build for Composer
+    needs: [ test, assets ]
+    if: contains(github.ref, 'tags/')
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Clean Package.
+        run: bash bin/build.sh
+
+      - name: Create Zip
+        run: zip -r ${{ github.event.repository.name }}.zip ./
+
+      - name: Deploy Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Zip
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/${{ github.event.repository.name }}.zip
+          asset_name: ${{ github.event.repository.name }}.zip
+          asset_content_type: application/zip

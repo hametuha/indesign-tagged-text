@@ -1,0 +1,11 @@
+.editorconfig export-ignore
+.eslintrc export-ignore
+.stylelintrc.json export-ignore
+.github/ export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+tests/ export-ignore
+bin/ export-ignore
+composer.lock export-ignore
+phpcs.ruleset.xml export-ignore
+phpunit.xml.dist export-ignore

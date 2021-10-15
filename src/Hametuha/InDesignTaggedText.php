@@ -4,17 +4,17 @@ namespace Hametuha;
 
 
 class InDesignTaggedText {
-	
+
 	protected $line_code = "\n";
-	
+
 	protected $char_code = '';
-	
-	protected $os        = '';
-	
+
+	protected $os = '';
+
 	protected $allowed_codes = [ 'UNICODE', 'SJIS', 'ASCII' ];
-	
+
 	protected $lines = [];
-	
+
 	/**
 	 * InDesignTaggedText constructor.
 	 *
@@ -26,11 +26,11 @@ class InDesignTaggedText {
 	public function __construct( $os, $char_code ) {
 		$os        = strtoupper( $os );
 		$char_code = strtoupper( $char_code );
-		if ( ! in_array( $os, [ 'MAC', 'WIN' ] ) ) {
+		if ( ! in_array( $os, [ 'MAC', 'WIN' ], true ) ) {
 			throw new \Exception( 'OS should be WIN or MAC' );
 		}
 		$this->os = $os;
-		if ( ! in_array( $char_code, $this->allowed_codes ) ) {
+		if ( ! in_array( $char_code, $this->allowed_codes, true ) ) {
 			throw new \Exception( sprintf( '$char_code should be in %s.', implode( ', ', $this->allowed_codes ) ) );
 		}
 		$this->char_code = $char_code;
@@ -40,12 +40,14 @@ class InDesignTaggedText {
 			$this->line_code = "\r\n";
 		}
 	}
-	
+
 	/**
+	 * Convert file.
+	 *
 	 * @param string $file File path.
 	 *
 	 * @throws \Exception
-	 * @return string
+	 * @return string[]
 	 */
 	public function convert( $file ) {
 		if ( ! file_exists( $file ) ) {
@@ -55,11 +57,21 @@ class InDesignTaggedText {
 		if ( ! $content ) {
 			throw new \Exception( 'Failed to load file.' );
 		}
-		$lines = preg_split( '#\r?\n#u', $content );
-		$this->lines = $this->parse( $lines );
-		return $content;
+		return $this->convert_from_string( $content );
 	}
-	
+
+	/**
+	 * Convert lines from string.
+	 *
+	 * @param string $text Text to convert.
+	 * @return string[]
+	 */
+	public function convert_from_string( $text ) {
+		$lines       = preg_split( '#\r?\n#u', $text );
+		$this->lines = $this->parse( $lines );
+		return $this->lines;
+	}
+
 	/**
 	 * Parse all lines.
 	 *
@@ -76,18 +88,26 @@ class InDesignTaggedText {
 			}
 			// Paragraph styles.
 			foreach ( [
-				'/^# /u' => 'Heading',
-				'/^#\* /u' => 'CenterHeading',
-				'/^> /u' => 'Quote',
-				'/^>\| /u' => 'RightAligned',
-				'/^<A> /u' => 'AA',
-				'/^\{I\} /' => 'Interviewer',
-				'/^>\* /u' => 'CenterAligned',
-				'/^<\| /u' => 'Interviewee',
+				'/^(#{1,6}) /u' => 'Heading',
+				'/^#\* /u'      => 'CenterHeading',
+				'/^> /u'        => 'Quote',
+				'/^>\| /u'      => 'RightAligned',
+				'/^<A> /u'      => 'AA',
+				'/^\{I\} /'     => 'Interviewer',
+				'/^>\* /u'      => 'CenterAligned',
+				'/^<\| /u'      => 'Interviewee',
 			] as $regexp => $style_name ) {
 				if ( preg_match( $regexp, $line ) ) {
-					$line = preg_replace( $regexp, "<ParaStyle:{$style_name}>", $line );
-					break;
+					switch ( $style_name ) {
+						case 'Heading':
+							$line = preg_replace_callback( $regexp, function( $matches ) {
+								return sprintf( "<ParaStyle:Heading%d>", strlen( $matches[1] ) );
+							}, $line );
+							break 2;
+						default:
+							$line = preg_replace( $regexp, "<ParaStyle:{$style_name}>", $line );
+							break 2;
+					}
 				}
 			}
 			// Change strong.
@@ -96,12 +116,12 @@ class InDesignTaggedText {
 			] as $regexp ) {
 				$line = preg_replace( $regexp, '<CharStyle:Emphasis>$1<CharStyle:>', $line );
 			}
-			// Add kenten
+			// Add Kenten.
 			foreach ( [
 				'#__([^_]+)__#u',
 				'#《《([^》]+)》》#u',
 			] as $regexp ) {
-				$line = preg_replace( $regexp, '<cKentenKind:1>$1<cKentenKind:>', $line );
+				$line = preg_replace( $regexp, '<CharStyle:Sesami>$1<CharStyle:>', $line );
 			}
 			// Warichu
 			foreach ( [
@@ -131,8 +151,8 @@ class InDesignTaggedText {
 						return $replaced;
 					} else {
 						$replaced = $match[1];
-						
-						return sprintf( '<cMojiRuby:0><cRuby:1><cRubyString:%s>%s<cMojiRuby:><cRuby:><cRubyString:>', $match[ 2 ], $replaced );
+
+						return sprintf( '<cMojiRuby:0><cRuby:1><cRubyString:%s>%s<cMojiRuby:><cRuby:><cRubyString:>', $match[2], $replaced );
 					}
 				}, $line );
 			}
@@ -147,14 +167,14 @@ class InDesignTaggedText {
 			}
 
 			// If no paragraph styles are set, add no paragraph style.
-			if ( 0 !== strpos( $line,  '<ParaStyle' ) ) {
+			if ( 0 !== strpos( $line, '<ParaStyle' ) ) {
 				$line = '<ParaStyle:Normal>' . $line;
 			}
 			$converted[] = $line;
 		}
 		return $converted;
 	}
-	
+
 	/**
 	 * Save converted contents.
 	 *
@@ -164,19 +184,32 @@ class InDesignTaggedText {
 	 * @throws \Exception
 	 */
 	public function save( $target ) {
-		$lines = $this->add_header( $this->lines );
-		$content = implode( $this->line_code, $lines );
-		$content = $this->convert_encoding( $content, $this->char_code );
+		$content = $this->export( true );
 		if ( ! file_put_contents( $target, $content ) ) {
 			throw new \Exception( 'Failed to save file.' );
 		}
 		return true;
 	}
-	
+
+	/**
+	 * Export text.
+	 *
+	 * @param bool $convet_encode If true, change encoding.
+	 * @return string
+	 */
+	public function export( $convert_encode = false ) {
+		$lines   = $this->add_header( $this->lines );
+		$content = implode( $this->line_code, $lines );
+		if ( $convert_encode ) {
+			$content = $this->convert_encoding( $content, $this->char_code );
+		}
+		return $content;
+	}
+
 	/**
 	 * Add tagged text header.
 	 *
-	 * @param  array $lines
+	 * @param string[] $lines Lines.
 	 * @return array
 	 */
 	public function add_header( $lines ) {
@@ -184,12 +217,12 @@ class InDesignTaggedText {
 			sprintf( '<%s-%s>', $this->char_code, $this->os ),
 		], $lines );
 	}
-	
+
 	/**
 	 * Convert encoding string.
 	 *
 	 * @see http://kstation2.blog10.fc2.com/blog-entry-314.html
-	 * @param string $encoding
+	 * @param string $encoding Encoding name.
 	 *
 	 * @return string
 	 */
@@ -207,16 +240,17 @@ class InDesignTaggedText {
 				break;
 		}
 	}
-	
+
 	/**
 	 * Convert lines to output string.
 	 *
-	 * @param string $string
-	 * @param string $char_code
+	 * @param string $string    String to convert.
+	 * @param string $char_code Target char code.
 	 * @return string
 	 */
 	public function convert_encoding( $string, $char_code ) {
-		if ( ! ( $new_encoding = $this->convert_to( $char_code ) ) ) {
+		$new_encoding = $this->convert_to( $char_code );
+		if ( ! $new_encoding ) {
 			return $string;
 		}
 		return mb_convert_encoding( $string, $new_encoding, 'utf-8' );
