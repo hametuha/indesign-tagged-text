@@ -96,6 +96,8 @@ class InDesignTaggedText {
 				'/^\{I\} /'     => 'Interviewer',
 				'/^>\* /u'      => 'CenterAligned',
 				'/^<\| /u'      => 'Interviewee',
+				'/^- /u'        => 'UnorderedList',
+				'/^\d+. /u'     => 'OrderedList',
 			] as $regexp => $style_name ) {
 				if ( preg_match( $regexp, $line ) ) {
 					switch ( $style_name ) {
@@ -123,6 +125,13 @@ class InDesignTaggedText {
 			] as $regexp ) {
 				$line = preg_replace( $regexp, '<CharStyle:Sesami>$1<CharStyle:>', $line );
 			}
+			// Double dash
+			foreach ( [
+				'#—{2}#u',
+			] as $regexp ) {
+				$line = preg_replace( $regexp, '<CharStyle:Dash>—<CharStyle:>', $line );
+			}
+
 			// Warichu
 			foreach ( [
 				'#〔〔([^〕]+)〕〕#u',
@@ -178,12 +187,13 @@ class InDesignTaggedText {
 	/**
 	 * Save converted contents.
 	 *
-	 * @param string $target
+	 * @param string $target          Export target.
+	 * @param bool   $format_markdown If true, format as markdonw.
 	 *
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function save( $target ) {
+	public function save( $target, $format_markdown = false ) {
 		$content = $this->export( true );
 		if ( ! file_put_contents( $target, $content ) ) {
 			throw new \Exception( 'Failed to save file.' );
@@ -194,16 +204,41 @@ class InDesignTaggedText {
 	/**
 	 * Export text.
 	 *
-	 * @param bool $convet_encode If true, change encoding.
+	 * @param bool $convert_encode If true, change encoding.
+	 * @param bool $format_markdown Default false.
 	 * @return string
 	 */
-	public function export( $convert_encode = false ) {
+	public function export( $convert_encode = false, $format_markdown = false ) {
 		$lines   = $this->add_header( $this->lines );
 		$content = implode( $this->line_code, $lines );
+		if ( $format_markdown ) {
+			$content = $this->markdown_format( $content );
+		}
 		if ( $convert_encode ) {
 			$content = $this->convert_encoding( $content, $this->char_code );
 		}
 		return $content;
+	}
+
+	/**
+	 * Fix markdown line ending.
+	 *
+	 * 1. Convert double space to single line break.
+	 * 2. Remove 2 space at the end of line.
+	 * 3. Clear nbsp
+	 *
+	 * @param string $text Contents.
+	 * @return string
+	 */
+	public function markdown_format( $text ) {
+		// Fix double space.
+		$original_line = $this->line_code;
+		$text          = str_replace( $original_line . $original_line, $original_line, $text );
+		// Remove 2 space.
+		$text = preg_replace( '/ {2}$/mu', '', $text );
+		// Remove single nbsp.
+		$text = preg_replace( '/(\r\n|\r|\n)&nbsp;(\r\n|\r|\n)/u', '$1$2', $text );
+		return $text;
 	}
 
 	/**

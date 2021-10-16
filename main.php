@@ -13,6 +13,7 @@ if ( 'cli' !== php_sapi_name() ) {
 
 // Get arguments.
 list( $self, $src_dir, $dest_dir ) = $argv;
+$markdown                          = isset( $argv[3] ) && '--markdown' === $argv[3];
 
 // Check directory.
 foreach ( [ $src_dir, $dest_dir ] as $dir ) {
@@ -59,7 +60,7 @@ foreach ( scandir( $src_dir ) as $file ) {
 	}
 	printf( 'Converting %s' . PHP_EOL, $file );
 	$converter->convert( $src_dir . '/' . $file );
-	$converter->save( $dest_dir . '/' . $file );
+	$converter->save( $dest_dir . '/' . $file, $markdown );
 	$total++;
 }
 
