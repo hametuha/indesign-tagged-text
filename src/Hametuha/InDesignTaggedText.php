@@ -233,7 +233,7 @@ class InDesignTaggedText {
 	 */
 	public function markdown_format( $text ) {
 		// Fix double space.
-		$text = preg_replace( "/(\r\n|\r|\n)(\r\n|\r|\n)/u", "$1", $text );
+		$text = preg_replace( "/(\r\n|\r|\n)(\r\n|\r|\n)/u", '$1', $text );
 		// Remove 2 space.
 		$text = preg_replace( '/ {2}$/mu', '', $text );
 		// Remove single nbsp.
