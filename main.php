@@ -59,8 +59,8 @@ foreach ( scandir( $src_dir ) as $file ) {
 		continue;
 	}
 	printf( 'Converting %s' . PHP_EOL, $file );
-	$converter->convert( $src_dir . '/' . $file );
-	$converter->save( $dest_dir . '/' . $file, $markdown );
+	$converter->convert( $src_dir . '/' . $file, $markdown );
+	$converter->save( $dest_dir . '/' . $file );
 	$total++;
 }
 

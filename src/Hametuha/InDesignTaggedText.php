@@ -44,12 +44,13 @@ class InDesignTaggedText {
 	/**
 	 * Convert file.
 	 *
-	 * @param string $file File path.
+	 * @param string $file     File path.
+	 * @param bool   $markdown If true, convert markdonw.
 	 *
 	 * @throws \Exception
 	 * @return string[]
 	 */
-	public function convert( $file ) {
+	public function convert( $file, $markdown = false ) {
 		if ( ! file_exists( $file ) ) {
 			throw new \Exception( sprintf( '%s doesn\'t exist.', $file ) );
 		}
@@ -57,16 +58,20 @@ class InDesignTaggedText {
 		if ( ! $content ) {
 			throw new \Exception( 'Failed to load file.' );
 		}
-		return $this->convert_from_string( $content );
+		return $this->convert_from_string( $content, $markdown );
 	}
 
 	/**
 	 * Convert lines from string.
 	 *
-	 * @param string $text Text to convert.
+	 * @param string $text     Text to convert.
+	 * @param bool   $markdown If true, convert markdonw.
 	 * @return string[]
 	 */
-	public function convert_from_string( $text ) {
+	public function convert_from_string( $text, $markdown = false ) {
+		if ( $markdown ) {
+			$text = $this->markdown_format( $text );
+		}
 		$lines       = preg_split( '#\r?\n#u', $text );
 		$this->lines = $this->parse( $lines );
 		return $this->lines;
@@ -188,13 +193,12 @@ class InDesignTaggedText {
 	 * Save converted contents.
 	 *
 	 * @param string $target          Export target.
-	 * @param bool   $format_markdown If true, format as markdonw.
 	 *
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function save( $target, $format_markdown = false ) {
-		$content = $this->export( true, $format_markdown );
+	public function save( $target ) {
+		$content = $this->export( true );
 		if ( ! file_put_contents( $target, $content ) ) {
 			throw new \Exception( 'Failed to save file.' );
 		}
@@ -204,16 +208,13 @@ class InDesignTaggedText {
 	/**
 	 * Export text.
 	 *
-	 * @param bool $convert_encode If true, change encoding.
+	 * @param bool $convert_encode If true, convert encoding.
 	 * @param bool $format_markdown Default false.
 	 * @return string
 	 */
-	public function export( $convert_encode = false, $format_markdown = false ) {
+	public function export( $convert_encode = false ) {
 		$lines   = $this->add_header( $this->lines );
 		$content = implode( $this->line_code, $lines );
-		if ( $format_markdown ) {
-			$content = $this->markdown_format( $content );
-		}
 		if ( $convert_encode ) {
 			$content = $this->convert_encoding( $content, $this->char_code );
 		}
@@ -232,8 +233,7 @@ class InDesignTaggedText {
 	 */
 	public function markdown_format( $text ) {
 		// Fix double space.
-		$original_line = $this->line_code;
-		$text          = str_replace( $original_line . $original_line, $original_line, $text );
+		$text = preg_replace( "/(\r\n|\r|\n)(\r\n|\r|\n)/u", "$1", $text );
 		// Remove 2 space.
 		$text = preg_replace( '/ {2}$/mu', '', $text );
 		// Remove single nbsp.
