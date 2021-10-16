@@ -194,7 +194,7 @@ class InDesignTaggedText {
 	 * @throws \Exception
 	 */
 	public function save( $target, $format_markdown = false ) {
-		$content = $this->export( true );
+		$content = $this->export( true, $format_markdown );
 		if ( ! file_put_contents( $target, $content ) ) {
 			throw new \Exception( 'Failed to save file.' );
 		}
