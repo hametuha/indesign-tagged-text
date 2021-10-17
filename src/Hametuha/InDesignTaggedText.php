@@ -157,7 +157,6 @@ class InDesignTaggedText {
 			foreach ( [
 				'｜([^《]+)《([^》]+)》',
 				'\|([^<]+)<([^>]+)>',
-				'(.)《([^》]+)》',
 			] as $index => $regexp ) {
 				$line = preg_replace_callback( '#' . $regexp . '#u', function( $match ) {
 					if ( '\\' === $match[1] ) {
