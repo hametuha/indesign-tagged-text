@@ -32,6 +32,7 @@ class UtilityTest extends \PHPUnit\Framework\TestCase {
 - 雲のほそく
 1. たなびきたる
 102. 夏は夜
+——月の頃はさらなり
 TXT;
 		$converter->convert_from_string( $txt );
 		$converted = $converter->export();
@@ -44,6 +45,7 @@ TXT;
 <ParaStyle:UnorderedList>雲のほそく
 <ParaStyle:OrderedList>たなびきたる
 <ParaStyle:OrderedList>夏は夜
+<ParaStyle:Normal><CharStyle:Dash>―<CharStyle:>月の頃はさらなり
 TXT;
 		$expected = str_replace( "\n", "\r", $expected );
 		$this->assertEquals( $expected, $converted );

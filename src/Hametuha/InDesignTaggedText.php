@@ -132,11 +132,11 @@ class InDesignTaggedText {
 			}
 			// Double dash
 			foreach ( [
-				'#—{2}#u',
+				'#—{2}#u', // EM dash,
 			] as $regexp ) {
-				$line = preg_replace( $regexp, '<CharStyle:Dash>—<CharStyle:>', $line );
+				// Dash will be horizontal bar(U+2015).
+				$line = preg_replace( $regexp, '<CharStyle:Dash>―<CharStyle:>', $line );
 			}
-
 			// Warichu
 			foreach ( [
 				'#〔〔([^〕]+)〕〕#u',
