@@ -132,7 +132,8 @@ class InDesignTaggedText {
 			}
 			// Double dash
 			foreach ( [
-				'#—{2}#u', // EM dash,
+				'#—{2}#u', // EM dash.
+				'#―{2}#u', // Double horizontal bar.
 			] as $regexp ) {
 				// Dash will be horizontal bar(U+2015).
 				$line = preg_replace( $regexp, '<CharStyle:Dash>―<CharStyle:>', $line );
