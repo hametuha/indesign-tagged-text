@@ -33,6 +33,7 @@ class UtilityTest extends \PHPUnit\Framework\TestCase {
 1. たなびきたる
 102. 夏は夜
 ——月の頃はさらなり
+やみもなお［［蛍の多くとびちがいたる］］
 TXT;
 		$converter->convert_from_string( $txt );
 		$converted = $converter->export();
@@ -46,6 +47,7 @@ TXT;
 <ParaStyle:OrderedList>たなびきたる
 <ParaStyle:OrderedList>夏は夜
 <ParaStyle:Normal><CharStyle:Dash>―<CharStyle:>月の頃はさらなり
+<ParaStyle:Normal>やみもなお<FootnoteStart:>蛍の多くとびちがいたる<FootnoteEnd:>
 TXT;
 		$expected = str_replace( "\n", "\r", $expected );
 		$this->assertEquals( $expected, $converted );

@@ -3,6 +3,10 @@
 namespace Hametuha;
 
 
+/**
+ * Convert markup to InDesign tagged text.
+ *
+ */
 class InDesignTaggedText {
 
 	protected $line_code = "\n";
@@ -178,6 +182,13 @@ class InDesignTaggedText {
 				'#<sub>([^<]*)</sub>#u' => 'Sub',
 			] as $regexp => $style ) {
 				$line = preg_replace( $regexp, '<CharStyle:' . $style . '>$1<CharStyle:>', $line );
+			}
+
+			// Footnote.
+			foreach ( [
+				'#［［([^］]+)］］#u',
+			] as $regexp ) {
+				$line = preg_replace( $regexp, '<FootnoteStart:>$1<FootnoteEnd:>', $line );
 			}
 
 			// If no paragraph styles are set, add no paragraph style.

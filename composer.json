@@ -19,6 +19,9 @@
 		"fix": [
 			"phpcs --config-set installed_paths $(pwd)/vendor/wp-coding-standards/wpcs",
 			"phpcbf --standard=phpcs.ruleset.xml $(find ./ -name '*.php')"
+		],
+		"convert": [
+			"php main.php tests tmp"
 		]
 	},
 	"require": {
