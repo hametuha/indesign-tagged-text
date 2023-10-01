@@ -203,13 +203,14 @@ class InDesignTaggedText {
 	/**
 	 * Save converted contents.
 	 *
-	 * @param string $target          Export target.
+	 * @param string $target         Export target.
+	 * @param bool   $convert_encode If true, convert encodieng.
 	 *
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function save( $target ) {
-		$content = $this->export( true );
+	public function save( $target, $convert_encode = true ) {
+		$content = $this->export( $convert_encode );
 		if ( ! file_put_contents( $target, $content ) ) {
 			throw new \Exception( 'Failed to save file.' );
 		}
@@ -224,8 +225,15 @@ class InDesignTaggedText {
 	 * @return string
 	 */
 	public function export( $convert_encode = false ) {
-		$lines   = $this->add_header( $this->lines );
+		if ( $convert_encode ) {
+			$lines = $this->add_header( $this->lines );
+		} else {
+			$lines = $this->lines;
+		}
 		$content = implode( $this->line_code, $lines );
+		// Convert forced line break(強制改行)
+		// todo: Windows accespts lf?
+		$content = str_replace( '<000A>', "\n", $content );
 		if ( $convert_encode ) {
 			$content = $this->convert_encoding( $content, $this->char_code );
 		}
